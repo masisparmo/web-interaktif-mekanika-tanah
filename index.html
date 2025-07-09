@@ -269,7 +269,8 @@
             score: 0,
             userData: {},
             userAnswers: [],
-            completionTime: null
+            completionTime: null,
+            geminiApiKey: '' // Added to state
         };
 
         // DOM Elements
@@ -466,7 +467,7 @@
             try {
                 let chatHistory = [{ role: "user", parts: [{ text: prompt }, { text: text }] }];
                 const payload = { contents: chatHistory };
-                const apiKey = geminiApiKey;
+                const apiKey = state.geminiApiKey;
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 
                 const response = await fetch(apiUrl, {
@@ -484,8 +485,10 @@
                 const result = await response.json();
                 
                 if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
-                    const summaryText = result.candidates[0].content.parts[0].text;
-                    summaryContent.innerHTML = summaryText; // Already in HTML
+                    let summaryText = result.candidates[0].content.parts[0].text;
+                    // FIX: Clean the response from markdown code block fences
+                    summaryText = summaryText.replace(/^```html\s*/, '').replace(/```$/, '');
+                    summaryContent.innerHTML = summaryText;
                 } else {
                     summaryContent.innerHTML = '<p class="text-red-400">Gagal membuat ringkasan. Silakan coba lagi.</p>';
                 }
@@ -529,7 +532,7 @@
                         responseSchema: schema
                     }
                 };
-                const apiKey = "AIzaSyCyUHbvOWW2yhGuyHNMu7pD2unE7X6dK_s";
+                const apiKey = state.geminiApiKey;
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -568,7 +571,7 @@
             try {
                 let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
                 const payload = { contents: chatHistory };
-                const apiKey = "AIzaSyCyUHbvOWW2yhGuyHNMu7pD2unE7X6dK_s";
+                const apiKey = state.geminiApiKey;
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 
                 const response = await fetch(apiUrl, {
@@ -819,7 +822,3 @@
     </script>
 </body>
 </html>
-
-
-
-
