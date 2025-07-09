@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -467,7 +466,7 @@
             try {
                 let chatHistory = [{ role: "user", parts: [{ text: prompt }, { text: text }] }];
                 const payload = { contents: chatHistory };
-                const apiKey = "AIzaSyCyUHbvOWW2yhGuyHNMu7pD2unE7X6dK_s";
+                const apiKey = geminiApiKey;
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
                 
                 const response = await fetch(apiUrl, {
