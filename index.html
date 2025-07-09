@@ -1,0 +1,826 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembelajaran Interaktif Mekanika Tanah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .option-btn.correct {
+            background-color: #22c55e !important; /* green-500 */
+            color: white !important;
+            border-color: #16a34a !important; /* green-600 */
+        }
+        .option-btn.wrong {
+            background-color: #ef4444 !important; /* red-500 */
+            color: white !important;
+            border-color: #dc2626 !important; /* red-600 */
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; /* gray-800 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563; /* gray-600 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* gray-500 */
+        }
+        #chat-messages {
+            display: flex;
+            flex-direction: column;
+        }
+        .summary-content h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #60a5fa; /* blue-400 */
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #374151;
+            padding-bottom: 0.25rem;
+        }
+         .summary-content h4 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #93c5fd; /* blue-300 */
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .summary-content p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        .summary-content ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .summary-content code {
+            background-color: #1f2937;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+        }
+        .summary-content .calculation-example {
+            background-color: #f3f4f6; /* gray-100 */
+            color: #000000; /* black */
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+        }
+        .summary-content .calculation-example * {
+            color: #000000;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div id="app-container" class="min-h-screen flex flex-col items-center justify-center p-4 transition-opacity duration-500">
+
+        <!-- Selection Screen -->
+        <div id="selection-screen" class="w-full max-w-4xl">
+            <div class="bg-gray-800 p-8 rounded-xl shadow-2xl">
+                <h1 class="text-3xl font-bold text-center mb-2 text-blue-400">Pembelajaran Interaktif Mekanika Tanah</h1>
+                <p class="text-center text-gray-400 mb-8">Pilih bab yang ingin Anda pelajari dari buku Mekanika Tanah I & II.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 max-h-[50vh] overflow-y-auto pr-4">
+                    <div>
+                        <h2 class="text-xl font-semibold mb-3 text-blue-300 border-b-2 border-blue-400 pb-2">Mekanika Tanah I</h2>
+                        <div id="toc-1" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-semibold mb-3 text-blue-300 border-b-2 border-blue-400 pb-2">Mekanika Tanah II</h2>
+                        <div id="toc-2" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <div id="api-key-section" class="mb-6 p-4 bg-yellow-900/30 border border-yellow-600 rounded-lg text-yellow-200 text-sm">
+                        <p class="font-bold mb-2">Penting: Masukkan Kunci API Gemini Anda</p>
+                        <p class="mb-3">Aplikasi ini menggunakan Ai Google Gemini API untuk membuat ringkasan dan kuis. Untuk melanjutkan, Anda perlu memasukkan kunci API Gemini Anda.</p>
+                        <p class="mb-3">Cara mendapatkan kunci API:</p>
+                        <ol class="list-decimal list-inside mb-3">
+                            <li>Kunjungi <a href="https://aistudio.google.com/" target="_blank" class="text-blue-300 underline hover:text-blue-100">Google AI Studio</a>.</li>
+                            <li>Masuk dengan akun Google Anda.</li>
+                            <li>Di sidebar kiri, klik <strong>"Get API key"</strong> atau <strong>"Create API key in new project"</strong>.</li>
+                            <li>Salin kunci API yang dihasilkan dan tempelkan di bawah ini.</li>
+                        </ol>
+                        <label for="geminiApiKey" class="block mb-2 text-sm font-medium text-gray-300">Kunci API Gemini Anda:</label>
+                        <input type="text" id="geminiApiKey" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Masukkan kunci API Gemini Anda di sini" required>
+                    </div>
+                    <button id="start-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-all duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed shadow-lg" disabled>
+                        Mulai Belajar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learning Screen -->
+        <div id="learning-screen" class="hidden w-full max-w-4xl">
+             <button id="back-to-selection-btn" class="absolute top-4 left-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors z-20">
+                &larr; Kembali Pilih Bab
+            </button>
+            
+            <!-- Summary Section -->
+            <div id="summary-section" class="bg-gray-800 p-8 rounded-xl shadow-xl flex flex-col">
+                <h2 class="text-3xl font-bold mb-6 text-center text-blue-400">Ringkasan Bab</h2>
+                <div id="summary-loader" class="flex flex-col items-center justify-center h-full py-16">
+                    <div class="loader"></div>
+                    <p class="mt-4 text-gray-400">Membuat ringkasan untuk Anda...</p>
+                </div>
+                <div id="summary-content" class="summary-content text-gray-300 overflow-y-auto max-h-[70vh] pr-4"></div>
+                <button id="start-quiz-btn" class="hidden w-full mt-8 bg-green-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 transition-colors">Mulai Kuis</button>
+            </div>
+
+            <!-- Quiz Section -->
+            <div id="quiz-section" class="hidden bg-gray-800 p-8 rounded-xl shadow-xl flex flex-col mt-12">
+                <h2 class="text-3xl font-bold mb-4 text-center text-blue-400">Kuis Interaktif</h2>
+                <div id="quiz-loader" class="flex flex-col items-center justify-center h-full py-16">
+                    <div class="loader"></div>
+                    <p class="mt-4 text-gray-400">Menyiapkan pertanyaan kuis...</p>
+                </div>
+                <div id="quiz-content" class="hidden h-full flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <p class="text-lg">Pertanyaan <span id="question-number"></span> dari 10</p>
+                            <p class="text-lg">Skor: <span id="score">0</span></p>
+                        </div>
+                        <p id="question-text" class="text-xl font-semibold mb-6"></p>
+                        <div id="options-container" class="space-y-3"></div>
+                    </div>
+                    <div>
+                        <div id="explanation-container" class="hidden mt-4 p-4 bg-gray-900/70 rounded-lg border-l-4 border-blue-500">
+                            <p id="explanation-text" class="text-gray-300"></p>
+                        </div>
+                        <button id="next-btn" class="hidden w-full mt-6 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors">Lanjut</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden text-center bg-gray-800 p-12 rounded-xl shadow-2xl">
+            <h2 class="text-3xl font-bold mb-4">Kuis Selesai!</h2>
+            <p class="text-xl mb-6">Skor akhir Anda:</p>
+            <p id="final-score" class="text-7xl font-bold text-green-400 mb-8"></p>
+            <div class="flex justify-center gap-4">
+                <button id="print-results-btn" class="bg-yellow-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-yellow-700 transition-colors">Cetak Hasil</button>
+                <button id="retry-quiz-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors">Ulangi Kuis</button>
+                <button id="main-menu-btn" class="bg-gray-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-700 transition-colors">Pilih Bab Lain</button>
+            </div>
+        </div>
+
+        <!-- Floating Ask Expert Button -->
+        <button id="ask-expert-btn" class="hidden fixed bottom-8 right-8 bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-transform hover:scale-110 z-30">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </button>
+
+        <!-- Identity Modal -->
+        <div id="identity-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-40 p-4">
+            <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-8">
+                <h3 class="text-2xl font-bold text-blue-400 mb-6 text-center">Informasi Peserta</h3>
+                <form id="identity-form">
+                    <div class="mb-4">
+                        <label for="name" class="block mb-2 text-sm font-medium text-gray-300">Nama Lengkap</label>
+                        <input type="text" id="name" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="studentId" class="block mb-2 text-sm font-medium text-gray-300">ID Mahasiswa</label>
+                        <input type="text" id="studentId" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="phone" class="block mb-2 text-sm font-medium text-gray-300">No. Telp/WA</label>
+                        <input type="tel" id="phone" class="bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                    <button type="submit" id="submit-identity-btn" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Lanjutkan ke Kuis</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Chat Modal -->
+        <div id="chat-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col">
+                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                    <h3 class="text-xl font-bold text-blue-400">Tanya Ahli Geoteknik</h3>
+                    <button id="close-chat-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+                </div>
+                <div id="chat-messages" class="flex-grow p-4 overflow-y-auto">
+                    <!-- Chat messages will be appended here -->
+                </div>
+                <div class="p-4 border-t border-gray-700 flex items-center">
+                    <input type="text" id="chat-input" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white focus:ring-blue-500 focus:border-blue-500" placeholder="Ketik pertanyaan Anda...">
+                    <button id="send-chat-btn" class="ml-3 bg-blue-600 text-white font-bold p-3 rounded-lg hover:bg-blue-700 transition-colors flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        const bookData = {
+            "Mekanika Tanah I": {
+                "BAB I TANAH": `Dalam pandangan teknik sipil, tanah adalah himpunan mineral, bahan organik, dan endapan-endapan yang relatif lepas (loose), yang terletak di atas batuan dasar (bedrock). Ikatan antara butiran yang relatif lemah dapat disebabkan oleh karbonat, zat organik, atau oksida-oksida yang mengendap di antara partikel-partikel. Ruang di antara partikel-partikel dapat berisi air, udara ataupun keduanya. Proses pelapukan batuan atau proses geologi lainnya yang terjadi di dekat permukaan bumi membentuk tanah. Segumpal tanah dapat terdiri dari dua atau tiga bagian. Dalam tanah yang kering, hanya akan terdiri dari dua bagian, yaitu butir-butir tanah dan pori-pori udara. Dalam tanah yang jenuh juga terdapat dua bagian, yaitu bagian padat atau butiran dan air pori. Dalam keadaan tidak jenuh, tanah terdiri dari tiga bagian, yaitu bagian padat (butiran), pori-pori udara, dan air pori. Hubungan-hubungan volume yang sering digunakan dalam mekanika tanah adalah kadar air (w), angka pori (e), porositas (n) dan derajat kejenuhan (S). Pelapukan tanah akibat reaksi kimia menghasilkan susunan kelompok partikel berukuran koloid dengan diameter butiran lebih kecil dari 0,002 mm, yang disebut mineral lempung. Terdapat tiga mekanisme yang menyebabkan molekul air dipolar dapat tertarik oleh permukaan partikel lempung secara elektrik. Air yang tertarik secara elektris, yang berada di sekitar partikel lempung, disebut air lapisan ganda (double-layer water). Sifat plastis tanah lempung adalah akibat eksistensi dari lapisan ganda. Analisis ukuran butiran tanah adalah penentuan persentase berat butiran pada satu unit saringan. Batas-batas Atterberg menggambarkan konsistensi tanah berbutir halus berdasarkan kadar air, meliputi batas cair (LL), batas plastis (PL), dan batas susut (SL). Klasifikasi tanah yang sering digunakan adalah sistem Unified dan AASHTO.`,
+                "BAB II PEMADATAN": `Pemadatan tanah bertujuan untuk mempertinggi kuat geser, mengurangi kompresibilitas, mengurangi permeabilitas, dan mengurangi perubahan volume akibat perubahan kadar air. Tingkat kepadatan diukur dari berat volume keringnya (γd). Prinsip pemadatan menunjukkan adanya hubungan antara kadar air (w) dan berat volume kering (γd), di mana pada kadar air optimum (w_opt) tercapai berat volume kering maksimum (γd_mak). Uji pemadatan di laboratorium, seperti uji Proctor standar dan modifikasi, digunakan untuk menentukan hubungan ini. Faktor yang mempengaruhi pemadatan antara lain jenis tanah, kadar air, dan energi pemadatan. Sifat tanah lempung yang dipadatkan (susunan, permeabilitas, kompresibilitas, kuat geser) sangat bergantung pada apakah pemadatan dilakukan pada sisi kering (dry side) atau sisi basah (wet side) dari kadar air optimum. Spesifikasi pemadatan di lapangan bisa berdasarkan hasil akhir (persen kepadatan) atau cara pemadatan (jenis alat, jumlah lintasan). Pemadatan dalam (deep compaction) seperti vibroflotation digunakan untuk tanah granuler tebal dan longgar. Tanah lempung juga dapat mengalami kembang-susut akibat perubahan kadar air, yang potensinya dapat diuji di laboratorium.`,
+                "BAB III AIR TANAH, PERMEABILITAS, DAN REMBESAN": `Air tanah adalah air di bawah permukaan bumi. Tekanan kapiler menyebabkan air naik di atas muka air tanah, menciptakan zona kapiler dengan tekanan air negatif. Permeabilitas (k) adalah sifat tanah yang memungkinkan air mengalir melaluinya, diatur oleh Hukum Darcy (v = ki), di mana v adalah kecepatan aliran dan i adalah gradien hidrolik. Uji permeabilitas dapat dilakukan di laboratorium (constant-head, falling-head) dan di lapangan (sumur uji, lubang bor). Rembesan adalah aliran air di dalam tanah. Analisis rembesan dua dimensi menggunakan jaring arus (flow-net), yang terdiri dari garis aliran dan garis ekipotensial yang saling tegak lurus. Jaring arus digunakan untuk menghitung debit rembesan dan tekanan air pori di bawah struktur seperti bendungan atau turap. Aliran air menimbulkan gaya rembesan pada butiran tanah, yang dapat mempengaruhi stabilitas. Jika gradien hidrolik ke atas mencapai nilai kritis (ic), dapat terjadi kondisi quick-condition atau piping, yang membahayakan struktur.`,
+                "BAB IV TEGANGAN EFEKTIF": `Prinsip tegangan efektif, yang dikemukakan oleh Terzaghi, adalah konsep fundamental dalam mekanika tanah. Prinsip ini menyatakan bahwa tegangan total (σ) pada suatu bidang di dalam massa tanah jenuh terbagi menjadi dua komponen: tegangan efektif (σ') yang ditahan oleh kerangka butiran tanah, dan tekanan air pori (u) yang bekerja di dalam rongga pori. Hubungannya adalah σ = σ' + u. Tegangan efektif mengontrol sifat mekanik tanah seperti kuat geser dan perubahan volume (penurunan). Perubahan volume atau deformasi pada tanah hanya terjadi akibat perubahan tegangan efektif, bukan tegangan total. Pada tanah tak jenuh, persamaan tegangan efektif menjadi lebih kompleks karena adanya fasa udara, melibatkan tekanan udara pori (ua) dan tekanan air pori (uw). Gaya rembesan air di dalam tanah juga mempengaruhi tegangan efektif; aliran ke bawah akan meningkatkan tegangan efektif, sementara aliran ke atas akan menguranginya.`,
+                "BAB V KUAT GESER TANAH": `Kuat geser tanah (τ) adalah tahanan internal maksimum per satuan luas yang dapat dikerahkan tanah untuk menahan keruntuhan sepanjang bidang geser. Menurut kriteria keruntuhan Mohr-Coulomb, kuat geser dinyatakan sebagai τ = c' + σ' tan φ', di mana c' adalah kohesi efektif, σ' adalah tegangan normal efektif pada bidang runtuh, dan φ' adalah sudut gesek dalam efektif. Parameter ini ditentukan melalui uji laboratorium seperti uji geser langsung (direct shear test) dan uji triaksial (triaxial test). Uji triaksial dapat dilakukan dalam berbagai kondisi drainasi: Consolidated-Drained (CD), Consolidated-Undrained (CU), dan Unconsolidated-Undrained (UU). Kuat geser tanah pasir (c' ≈ 0) sangat dipengaruhi oleh kerapatan relatif dan tegangan kekang. Kuat geser tanah lempung bergantung pada sejarah tegangan (normally consolidated vs. overconsolidated) dan kondisi drainasi. Lintasan tegangan (stress path) digunakan untuk memvisualisasikan perubahan kondisi tegangan selama pembebanan.`
+            },
+            "Mekanika Tanah II": {
+                "BAB VI DISTRIBUSI TEGANGAN DI DALAM TANAH": `Distribusi tegangan di dalam tanah akibat beban di permukaan dianalisis menggunakan teori elastisitas. Teori Boussinesq (1885) adalah yang paling umum digunakan, dengan asumsi tanah bersifat elastis, homogen, isotropis, dan semi-tak terhingga. Teori ini menyediakan persamaan untuk menghitung tambahan tegangan vertikal (Δσz), radial (Δσr), dan geser (τrz) pada titik manapun di dalam tanah akibat berbagai jenis beban: beban titik, beban garis, dan beban terbagi rata (berbentuk lajur, persegi panjang, atau lingkaran). Grafik pengaruh, seperti diagram Newmark, digunakan untuk mempermudah perhitungan tegangan di bawah fondasi dengan bentuk tidak beraturan. Teori Westergaard (1938) merupakan alternatif yang mengasumsikan tanah diperkuat oleh lapisan-lapisan tipis horizontal, yang lebih cocok untuk tanah berlapis. Metode pendekatan seperti penyebaran beban 2V:1H juga sering digunakan untuk estimasi cepat.`,
+                "BAB VII KONSOLIDASI": `Konsolidasi adalah proses pengurangan volume tanah jenuh berpermeabilitas rendah secara bertahap akibat keluarnya air pori karena pembebanan. Proses ini menyebabkan penurunan (settlement) yang bergantung pada waktu. Teori konsolidasi satu dimensi Terzaghi menjelaskan mekanisme ini, di mana beban awal ditanggung oleh kelebihan tekanan air pori (excess pore water pressure), yang kemudian secara bertahap ditransfer menjadi tegangan efektif saat air mengalir keluar. Kecepatan konsolidasi ditentukan oleh koefisien konsolidasi (Cv), yang diukur melalui uji konsolidasi atau oedometer di laboratorium. Hasil uji ini digambarkan dalam grafik e-log p' untuk menentukan parameter kompresibilitas seperti indeks pemampatan (Cc) dan indeks pemampatan kembali (Cr). Sejarah tegangan tanah (normally consolidated vs. overconsolidated) sangat mempengaruhi perilaku penurunannya. Konsolidasi sekunder adalah penurunan yang terjadi setelah konsolidasi primer selesai, akibat rangkak (creep) pada struktur tanah.`,
+                "BAB VIII PENURUNAN": `Penurunan (settlement) total fondasi adalah jumlah dari penurunan segera (immediate settlement) dan penurunan konsolidasi. Penurunan segera terjadi seketika setelah pembebanan, akibat deformasi elastis tanah, dan dominan pada tanah granuler atau tanah lempung tak jenuh. Besarnya dihitung menggunakan teori elastisitas, memerlukan parameter modulus elastis (E) dan angka Poisson (μ) tanah. Penurunan konsolidasi, yang terdiri dari primer dan sekunder, adalah komponen utama penurunan pada tanah lempung jenuh dan terjadi seiring waktu. Penurunan konsolidasi primer dihitung berdasarkan teori konsolidasi Terzaghi. Penurunan yang tidak seragam (differential settlement) antara bagian-bagian struktur yang berbeda adalah hal yang paling kritis dalam perancangan fondasi karena dapat menyebabkan kerusakan struktural. Estimasi penurunan dapat dilakukan menggunakan hasil uji laboratorium (konsolidometer) atau korelasi empiris dari uji lapangan seperti SPT dan CPT (sondir).`,
+                "BAB IX TEKANAN TANAH LATERAL": `Tekanan tanah lateral adalah gaya horizontal yang diberikan oleh tanah pada struktur penahan seperti dinding penahan atau turap. Terdapat tiga kondisi tekanan tanah: (1) Tekanan tanah saat diam (at-rest), Ko, terjadi ketika tidak ada pergerakan dinding. (2) Tekanan tanah aktif, Ka, terjadi ketika dinding bergerak menjauhi tanah, menyebabkan tanah runtuh dan mengerahkan tekanan minimum. (3) Tekanan tanah pasif, Kp, terjadi ketika dinding bergerak menekan tanah, mengerahkan tahanan maksimum. Teori Rankine dan Coulomb adalah dua metode klasik untuk menghitung tekanan aktif dan pasif. Teori Rankine mengasumsikan dinding licin, sedangkan Coulomb memperhitungkan gesekan antara dinding dan tanah. Besarnya tekanan dipengaruhi oleh sifat tanah (berat volume, sudut gesek φ, kohesi c), keberadaan air tanah, dan beban tambahan (surcharge) di permukaan tanah urugan.`,
+                "BAB X KAPASITAS DUKUNG TANAH": `Kapasitas dukung tanah adalah kemampuan tanah untuk menahan beban dari fondasi tanpa mengalami keruntuhan geser. Kapasitas dukung ultimit (qu) adalah tekanan maksimum yang dapat ditahan tanah. Ada dua mode keruntuhan utama: keruntuhan geser umum (general shear failure) pada tanah padat/kaku, dan keruntuhan geser lokal (local shear failure) pada tanah lepas/lunak. Persamaan kapasitas dukung Terzaghi adalah metode fundamental untuk menghitung qu, yang terdiri dari tiga komponen: kontribusi dari kohesi (c), tekanan overburden (q), dan berat volume tanah (γ). Persamaan ini menggunakan faktor kapasitas dukung (Nc, Nq, Nγ) yang merupakan fungsi dari sudut gesek dalam (φ) tanah. Meyerhof dan peneliti lain mengembangkan persamaan yang lebih komprehensif dengan menambahkan faktor koreksi untuk bentuk fondasi, kedalaman, dan kemiringan beban. Kapasitas dukung ijin (qa) diperoleh dengan membagi qu dengan faktor aman (biasanya 2.5-3).`,
+                "BAB XI STABILITAS LERENG": `Analisis stabilitas lereng mengevaluasi keamanan sebuah lereng tanah terhadap bahaya longsor. Kelongsoran terjadi ketika tegangan geser di sepanjang bidang longsor potensial melampaui kuat geser tanah. Faktor keamanan (F) didefinisikan sebagai rasio antara tahanan geser yang tersedia dengan tegangan geser yang bekerja. Bidang longsor dapat berbentuk datar (pada lereng tak terhingga) atau melengkung (umumnya diasumsikan berbentuk lingkaran pada lereng terbatas). Metode analisis yang umum adalah Metode Irisan (Method of Slices), seperti metode Fellenius dan Bishop yang Disederhanakan. Metode ini membagi massa tanah yang berpotensi longsor menjadi beberapa irisan vertikal dan menganalisis keseimbangan gaya atau momen pada setiap irisan. Stabilitas lereng sangat dipengaruhi oleh geometri lereng, sifat-sifat tanah (c', φ'), dan kondisi air tanah (tekanan air pori), yang dapat mengurangi tegangan efektif dan kuat geser tanah.`
+            }
+        };
+
+        // State variables
+        let state = {
+            currentScreen: 'selection',
+            selectedChapters: [],
+            quizQuestions: [],
+            currentQuestionIndex: 0,
+            score: 0,
+            userData: {},
+            userAnswers: [],
+            completionTime: null
+        };
+
+        // DOM Elements
+        const appContainer = document.getElementById('app-container');
+        const selectionScreen = document.getElementById('selection-screen');
+        const learningScreen = document.getElementById('learning-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const startBtn = document.getElementById('start-btn');
+        const backBtn = document.getElementById('back-to-selection-btn');
+        const toc1Container = document.getElementById('toc-1');
+        const toc2Container = document.getElementById('toc-2');
+        
+        const summarySection = document.getElementById('summary-section');
+        const summaryLoader = document.getElementById('summary-loader');
+        const summaryContent = document.getElementById('summary-content');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        
+        const quizSection = document.getElementById('quiz-section');
+        const quizLoader = document.getElementById('quiz-loader');
+        const quizContent = document.getElementById('quiz-content');
+        const questionNumberEl = document.getElementById('question-number');
+        const scoreEl = document.getElementById('score');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const explanationContainer = document.getElementById('explanation-container');
+        const explanationTextEl = document.getElementById('explanation-text');
+        const nextBtn = document.getElementById('next-btn');
+        
+        const finalScoreEl = document.getElementById('final-score');
+        const retryQuizBtn = document.getElementById('retry-quiz-btn');
+        const mainMenuBtn = document.getElementById('main-menu-btn');
+        const printResultsBtn = document.getElementById('print-results-btn');
+        
+        const askExpertBtn = document.getElementById('ask-expert-btn');
+        const chatModal = document.getElementById('chat-modal');
+        const closeChatBtn = document.getElementById('close-chat-btn');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendChatBtn = document.getElementById('send-chat-btn');
+
+        const identityModal = document.getElementById('identity-modal');
+        const identityForm = document.getElementById('identity-form');
+
+
+        // --- Initialization ---
+        function initializeApp() {
+            populateTOC();
+            setupEventListeners();
+            showScreen('selection');
+            updateStartButtonState();
+        }
+
+        function populateTOC() {
+            Object.keys(bookData["Mekanika Tanah I"]).forEach((chapter, index) => {
+                toc1Container.innerHTML += createCheckboxHTML(`book1-${index}`, chapter, "Mekanika Tanah I");
+            });
+            Object.keys(bookData["Mekanika Tanah II"]).forEach((chapter, index) => {
+                toc2Container.innerHTML += createCheckboxHTML(`book2-${index}`, chapter, "Mekanika Tanah II");
+            });
+        }
+
+        function createCheckboxHTML(id, label, book) {
+            return `
+                <div class="flex items-center">
+                    <input id="${id}" type="checkbox" value="${label}" data-book="${book}" class="chapter-checkbox h-4 w-4 bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500 rounded">
+                    <label for="${id}" class="ml-3 text-sm text-gray-300">${label}</label>
+                </div>
+            `;
+        }
+
+        function setupEventListeners() {
+            startBtn.addEventListener("click", handleStartLearning);
+            backBtn.addEventListener("click", resetAndGoToSelection);
+            startQuizBtn.addEventListener("click", () => identityModal.classList.remove("hidden"));
+            identityForm.addEventListener("submit", handleIdentitySubmit);
+            nextBtn.addEventListener("click", handleNextQuestion);
+            retryQuizBtn.addEventListener("click", handleRetryQuiz);
+            mainMenuBtn.addEventListener("click", resetAndGoToSelection);
+            printResultsBtn.addEventListener("click", handlePrintResults);
+            
+            const geminiApiKeyInput = document.getElementById("geminiApiKey");
+            geminiApiKeyInput.addEventListener("input", updateStartButtonState);
+
+            appContainer.addEventListener("change", (e) => {
+                if (e.target.classList.contains("chapter-checkbox")) {
+                    updateStartButtonState();
+                }
+            });
+
+            askExpertBtn.addEventListener("click", () => chatModal.classList.remove("hidden"));
+            closeChatBtn.addEventListener("click", () => chatModal.classList.add("hidden"));
+            sendChatBtn.addEventListener("click", handleSendMessage);
+            chatInput.addEventListener("keyup", (e) => {
+                if (e.key === "Enter") handleSendMessage();
+            });
+        }
+
+        function updateStartButtonState() {
+            const checkedChapters = document.querySelectorAll(".chapter-checkbox:checked").length;
+            const geminiApiKey = document.getElementById("geminiApiKey").value.trim();
+            startBtn.disabled = checkedChapters === 0 || geminiApiKey === "";
+        }
+
+        // --- Screen Management ---
+        function showScreen(screenId) {
+            selectionScreen.classList.add('hidden');
+            learningScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            
+            document.getElementById(`${screenId}-screen`).classList.remove('hidden');
+            state.currentScreen = screenId;
+        }
+
+        // --- Learning Flow ---
+        async function handleStartLearning() {
+            const geminiApiKey = document.getElementById("geminiApiKey").value.trim();
+            if (geminiApiKey === "") {
+                alert("Mohon masukkan kunci API Gemini Anda untuk melanjutkan.");
+                return;
+            }
+            state.geminiApiKey = geminiApiKey; // Store API key in state
+
+            const checkedBoxes = document.querySelectorAll(".chapter-checkbox:checked");
+            state.selectedChapters = Array.from(checkedBoxes).map(cb => ({
+                title: cb.value,
+                book: cb.dataset.book
+            }));
+
+            if (state.selectedChapters.length === 0) return;
+
+            showScreen("learning");
+            resetForNewLearningSession();
+
+            const chapterTexts = state.selectedChapters.map(ch => `Bab: ${ch.title}\n${bookData[ch.book][ch.title]}`).join("\n\n---\n\n");
+            
+            fetchSummary(chapterTexts);
+            fetchQuiz(chapterTexts);
+        }
+        
+        function handleIdentitySubmit(e) {
+            e.preventDefault();
+            state.userData = {
+                name: document.getElementById('name').value,
+                studentId: document.getElementById('studentId').value,
+                phone: document.getElementById('phone').value,
+            };
+            identityModal.classList.add('hidden');
+            handleStartQuiz();
+        }
+
+        function handleStartQuiz() {
+            summarySection.classList.add('hidden');
+            quizSection.classList.remove('hidden');
+            askExpertBtn.classList.add('hidden');
+            startQuiz();
+        }
+        
+        function handleRetryQuiz() {
+            showScreen('learning');
+            resultsScreen.classList.add('hidden');
+            quizSection.classList.remove('hidden');
+            askExpertBtn.classList.add('hidden');
+            
+            // Reset quiz state but keep questions
+            state.currentQuestionIndex = 0;
+            state.score = 0;
+            state.userAnswers = [];
+            startQuiz();
+        }
+
+        function resetForNewLearningSession() {
+            summarySection.classList.remove('hidden');
+            quizSection.classList.add('hidden');
+            summaryLoader.style.display = 'flex';
+            summaryContent.innerHTML = '';
+            quizLoader.style.display = 'flex';
+            quizContent.classList.add('hidden');
+            startQuizBtn.classList.add('hidden');
+            askExpertBtn.classList.add('hidden');
+            
+            state.quizQuestions = [];
+            state.currentQuestionIndex = 0;
+            state.score = 0;
+            state.userData = {};
+            state.userAnswers = [];
+            state.completionTime = null;
+            chatMessages.innerHTML = '';
+        }
+        
+        // --- Gemini API Calls ---
+        async function fetchSummary(text) {
+            const prompt = `Berdasarkan teks tentang mekanika tanah berikut, buatkan ringkasan yang lengkap dan mendetail dalam format HTML Rich Text. Sertakan definisi kunci, konsep utama, rumus-rumus perhitungan yang relevan (gunakan tag <sub> dan <sup> untuk sub/superscript jika perlu), dan satu contoh perhitungan sederhana untuk setiap bab jika memungkinkan. Gunakan tag HTML seperti <h3> untuk judul bab, <h4> untuk sub-judul, p untuk paragraf, ul dan li untuk daftar, strong atau b untuk penekanan, dan i atau em untuk istilah penting. Format contoh perhitungan dalam div dengan class 'calculation-example'.`;
+            
+            try {
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }, { text: text }] }];
+                const payload = { contents: chatHistory };
+                const apiKey = "AIzaSyCyUHbvOWW2yhGuyHNMu7pD2unE7X6dK_s";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    console.error("Summary API Error Body:", errorBody);
+                    throw new Error(`API Error: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    const summaryText = result.candidates[0].content.parts[0].text;
+                    summaryContent.innerHTML = summaryText; // Already in HTML
+                } else {
+                    summaryContent.innerHTML = '<p class="text-red-400">Gagal membuat ringkasan. Silakan coba lagi.</p>';
+                }
+
+            } catch (error) {
+                console.error('Error fetching summary:', error);
+                summaryContent.innerHTML = `<p class="text-red-400">Terjadi kesalahan saat mengambil ringkasan: ${error.message}</p>`;
+            } finally {
+                summaryLoader.style.display = 'none';
+                startQuizBtn.classList.remove('hidden');
+                askExpertBtn.classList.remove('hidden');
+            }
+        }
+
+        async function fetchQuiz(text) {
+            const prompt = `Berdasarkan teks tentang mekanika tanah berikut, buatlah 10 pertanyaan kuis interaktif dengan tingkat kesulitan bervariasi dari mudah hingga mahir. Untuk setiap pertanyaan, sediakan 4 pilihan jawaban, tandai jawaban yang benar, dan berikan penjelasan singkat mengapa jawaban itu benar.`;
+
+            const schema = {
+                type: "ARRAY",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        "question": { "type": "STRING" },
+                        "options": {
+                            "type": "ARRAY",
+                            "items": { "type": "STRING" }
+                        },
+                        "correctAnswer": { "type": "STRING" },
+                        "explanation": { "type": "STRING" }
+                    },
+                    required: ["question", "options", "correctAnswer", "explanation"]
+                }
+            };
+            
+            try {
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }, {text: text}] }];
+                const payload = {
+                    contents: chatHistory,
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: schema
+                    }
+                };
+                const apiKey = "AIzaSyCyUHbvOWW2yhGuyHNMu7pD2unE7X6dK_s";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errorBody = await response.text();
+                    console.error("Quiz API Error Body:", errorBody);
+                    throw new Error(`API Error: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    const jsonText = result.candidates[0].content.parts[0].text;
+                    state.quizQuestions = JSON.parse(jsonText);
+                } else {
+                     throw new Error('No valid candidates returned from API.');
+                }
+
+            } catch (error) {
+                console.error('Error fetching quiz:', error);
+                quizLoader.innerHTML = `<p class="text-red-400">Terjadi kesalahan saat membuat kuis: ${error.message}</p>`;
+            } finally {
+                quizLoader.style.display = 'none';
+            }
+        }
+
+        async function fetchExpertAnswer(question) {
+            const contextText = state.selectedChapters.map(ch => `Bab: ${ch.title}\n${bookData[ch.book][ch.title]}`).join('\n\n---\n\n');
+            const prompt = `Anda adalah seorang ahli geoteknik. Jawab pertanyaan berikut berdasarkan konteks yang diberikan. Jika pertanyaan di luar konteks, jelaskan bahwa Anda hanya bisa menjawab pertanyaan seputar materi yang dipilih.\n\nKonteks:\n${contextText}\n\nPertanyaan: ${question}`;
+
+            try {
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = { contents: chatHistory };
+                const apiKey = "AIzaSyCyUHbvOWW2yhGuyHNMu7pD2unE7X6dK_s";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                const typingIndicator = document.getElementById('ai-typing-indicator');
+                if(typingIndicator) typingIndicator.remove();
+                
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    const answerText = result.candidates[0].content.parts[0].text;
+                    addChatMessage(answerText, 'ai');
+                } else {
+                    addChatMessage('Maaf, saya tidak dapat menemukan jawaban saat ini.', 'ai-error');
+                }
+            } catch (error) {
+                console.error('Error fetching expert answer:', error);
+                const typingIndicator = document.getElementById('ai-typing-indicator');
+                if(typingIndicator) typingIndicator.remove();
+                addChatMessage(`Maaf, terjadi kesalahan: ${error.message}`, 'ai-error');
+            }
+        }
+
+
+        // --- Quiz Logic ---
+        function startQuiz() {
+            state.currentQuestionIndex = 0;
+            state.score = 0;
+            state.userAnswers = [];
+            quizContent.classList.remove('hidden');
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            if (state.currentQuestionIndex >= state.quizQuestions.length) {
+                showResults();
+                return;
+            }
+
+            const currentQuestion = state.quizQuestions[state.currentQuestionIndex];
+            questionNumberEl.textContent = state.currentQuestionIndex + 1;
+            scoreEl.textContent = state.score;
+            questionTextEl.textContent = currentQuestion.question;
+
+            optionsContainer.innerHTML = '';
+            const shuffledOptions = [...currentQuestion.options].sort(() => Math.random() - 0.5);
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-btn', 'w-full', 'text-left', 'p-4', 'bg-gray-700', 'rounded-lg', 'hover:bg-gray-600', 'transition-colors', 'border-2', 'border-transparent');
+                button.addEventListener('click', handleAnswerSelection);
+                optionsContainer.appendChild(button);
+            });
+
+            explanationContainer.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+        }
+
+        function handleAnswerSelection(event) {
+            const selectedButton = event.target;
+            const selectedAnswer = selectedButton.textContent;
+            const currentQuestion = state.quizQuestions[state.currentQuestionIndex];
+            const correctAnswer = currentQuestion.correctAnswer;
+            
+            state.userAnswers.push(selectedAnswer);
+
+            const allOptionBtns = optionsContainer.querySelectorAll('.option-btn');
+            allOptionBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:bg-gray-600');
+            });
+
+            if (selectedAnswer === correctAnswer) {
+                state.score++;
+                selectedButton.classList.add('correct');
+            } else {
+                selectedButton.classList.add('wrong');
+                allOptionBtns.forEach(btn => {
+                    if (btn.textContent === correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+            
+            scoreEl.textContent = state.score;
+            explanationTextEl.innerHTML = currentQuestion.explanation;
+            explanationContainer.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+        }
+
+        function handleNextQuestion() {
+            state.currentQuestionIndex++;
+            displayQuestion();
+        }
+
+        function showResults() {
+            const scorePercentage = Math.round((state.score / state.quizQuestions.length) * 100);
+            finalScoreEl.textContent = scorePercentage; // Display without '%'
+            
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' };
+            state.completionTime = new Intl.DateTimeFormat('id-ID', options).format(now) + ' WIB';
+
+            showScreen('results');
+            askExpertBtn.classList.remove('hidden');
+        }
+
+        function resetAndGoToSelection() {
+            resetForNewLearningSession();
+            document.querySelectorAll('.chapter-checkbox').forEach(cb => cb.checked = false);
+            startBtn.disabled = true;
+            showScreen('selection');
+        }
+
+        // --- Chat Logic ---
+        function handleSendMessage() {
+            const question = chatInput.value.trim();
+            if (!question) return;
+
+            addChatMessage(question, 'user');
+            chatInput.value = '';
+            addChatMessage('...', 'ai-typing');
+
+            fetchExpertAnswer(question);
+        }
+
+        function addChatMessage(message, type) {
+            const messageEl = document.createElement('div');
+            messageEl.classList.add('mb-4', 'p-3', 'rounded-lg', 'max-w-[85%]', 'w-fit');
+            
+            if (type === 'user') {
+                messageEl.classList.add('bg-blue-600', 'text-white', 'self-end', 'ml-auto');
+                messageEl.textContent = message;
+            } else if (type === 'ai') {
+                messageEl.classList.add('bg-gray-700', 'text-gray-200', 'self-start', 'mr-auto');
+                messageEl.innerHTML = message; 
+            } else if (type === 'ai-typing') {
+                messageEl.id = 'ai-typing-indicator';
+                messageEl.classList.add('bg-gray-700', 'text-gray-400', 'self-start', 'mr-auto');
+                messageEl.innerHTML = '<div class="flex items-center space-x-1"><div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.2s;"></div><div class="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style="animation-delay: 0.4s;"></div></div>';
+            } else if (type === 'ai-error') {
+                messageEl.classList.add('bg-red-900', 'text-red-300', 'self-start', 'mr-auto');
+                messageEl.textContent = message;
+            }
+            
+            chatMessages.appendChild(messageEl);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // --- Print Logic ---
+        function handlePrintResults() {
+            const chapterNames = state.selectedChapters.map(c => c.title.replace(/[^a-zA-Z0-9]/g, '_')).join('+');
+            const userName = state.userData.name.replace(/[^a-zA-Z0-9]/g, '_');
+            const printTitle = `Kuis_Mektan-${chapterNames}-${userName}`;
+
+            let printContent = `
+                <html>
+                <head>
+                    <title>${printTitle}</title>
+                    <style>
+                        @media print {
+                            @page {
+                                size: A4;
+                                margin: 2cm;
+                                @bottom-left {
+                                    content: "${printTitle}";
+                                    font-size: 9pt;
+                                    color: #666;
+                                }
+                                @bottom-right {
+                                    content: "Halaman " counter(page);
+                                    font-size: 9pt;
+                                    color: #666;
+                                }
+                            }
+                            body {
+                                font-family: Arial, sans-serif;
+                                font-size: 11pt;
+                            }
+                            h1, h2 { color: #333; }
+                            table { width: 100%; border-collapse: collapse; margin-top: 1rem; page-break-inside: auto; }
+                            tr { page-break-inside: avoid; page-break-after: auto; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; }
+                            .correct { color: green; font-weight: bold; }
+                            .wrong { color: red; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Hasil Kuis Mekanika Tanah</h1>
+                    <h2>Informasi Peserta</h2>
+                    <p><strong>Nama:</strong> ${state.userData.name || 'N/A'}</p>
+                    <p><strong>ID Mahasiswa:</strong> ${state.userData.studentId || 'N/A'}</p>
+                    <p><strong>No. Telp/WA:</strong> ${state.userData.phone || 'N/A'}</p>
+                    <h2>Skor Akhir: ${Math.round((state.score / state.quizQuestions.length) * 100)}</h2>
+                    <p><strong>Waktu Selesai:</strong> ${state.completionTime || 'N/A'}</p>
+                    <hr>
+                    <h2>Rincian Jawaban</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No.</th>
+                                <th>Pertanyaan</th>
+                                <th>Jawaban Anda</th>
+                                <th>Jawaban Benar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            state.quizQuestions.forEach((q, index) => {
+                const userAnswer = state.userAnswers[index] || "Tidak dijawab";
+                const isCorrect = userAnswer === q.correctAnswer;
+                printContent += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${q.question}</td>
+                        <td class="${isCorrect ? 'correct' : 'wrong'}">${userAnswer}</td>
+                        <td class="correct">${q.correctAnswer}</td>
+                    </tr>
+                `;
+            });
+
+            printContent += `
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+        }
+
+        // --- Start the app ---
+        initializeApp();
+    </script>
+</body>
+</html>
+
+
+
+
