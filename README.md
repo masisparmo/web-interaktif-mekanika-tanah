@@ -6,6 +6,8 @@ Deskripsi Umum
 
 Aplikasi ini adalah sebuah platform pembelajaran interaktif yang dirancang untuk membantu pengguna mempelajari dan menguji pemahaman mereka tentang konsep-konsep dalam Mekanika Tanah I & II. Aplikasi ini memanfaatkan kekuatan AI Google Gemini untuk secara dinamis menghasilkan ringkasan materi dan soal-soal kuis berdasarkan bab yang dipilih oleh pengguna.
 
+Akses aplikasi di [https://webmektan.isparmo.com/](https://webmektan.isparmo.com/)
+
 Fitur Utama
 -----------
 
