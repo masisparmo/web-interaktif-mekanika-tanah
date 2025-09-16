@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -462,7 +463,7 @@
         
         // --- Gemini API Calls ---
         async function fetchSummary(text) {
-            const prompt = `Berdasarkan teks tentang mekanika tanah berikut, buatkan ringkasan yang lengkap dan mendetail dalam format HTML Rich Text. Sertakan definisi kunci, konsep utama, rumus-rumus perhitungan yang relevan (gunakan tag <sub> dan <sup> untuk sub/superscript jika perlu), dan satu contoh perhitungan sederhana untuk setiap bab jika memungkinkan. Gunakan tag HTML seperti <h3> untuk judul bab, <h4> untuk sub-judul, p untuk paragraf, ul dan li untuk daftar, strong atau b untuk penekanan, dan i atau em untuk istilah penting. Format contoh perhitungan dalam div dengan class 'calculation-example'.`;
+            const prompt = `Berdasarkan teks tentang mekanika tanah berikut, buatkan ringkasan yang lengkap dan mendetail dalam format Markdown. Gunakan sintaks Markdown standar: Gunakan #, ##, ### untuk judul, - atau * untuk daftar, **teks** untuk tebal, dan *teks* untuk miring. Untuk rumus, cukup tuliskan seperti biasa dan jika ada pangkat atau indeks, gunakan ^ atau _ (contoh: e_0, sigma^2). Untuk contoh perhitungan, bungkus dalam blok kode (\`\`\`) dengan penanda 'calculation'.`;
             
             try {
                 let chatHistory = [{ role: "user", parts: [{ text: prompt }, { text: text }] }];
@@ -485,10 +486,22 @@
                 const result = await response.json();
                 
                 if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
-                    let summaryText = result.candidates[0].content.parts[0].text;
-                    // FIX: Clean the response from markdown code block fences
-                    summaryText = summaryText.replace(/^```html\s*/, '').replace(/```$/, '');
-                    summaryContent.innerHTML = summaryText;
+                    const converter = new showdown.Converter({
+                        tables: true,
+                        strikethrough: true,
+                        simpleLineBreaks: true,
+                        ghCompatibleHeaderId: true
+                    });
+                    
+                    let markdownText = result.candidates[0].content.parts[0].text;
+                    // Clean the response from markdown code block fences
+                    markdownText = markdownText.replace(/^```markdown\s*/im, '').replace(/```$/im, '');
+                    
+                    // Manually replace calculation blocks to add custom class
+                    markdownText = markdownText.replace(/```calculation/g, '<div class="calculation-example">').replace(/```/g, '</div>');
+
+                    summaryContent.innerHTML = converter.makeHtml(markdownText);
+
                 } else {
                     summaryContent.innerHTML = '<p class="text-red-400">Gagal membuat ringkasan. Silakan coba lagi.</p>';
                 }
