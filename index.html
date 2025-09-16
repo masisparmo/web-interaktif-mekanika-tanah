@@ -463,7 +463,13 @@
         
         // --- Gemini API Calls ---
         async function fetchSummary(text) {
-            const prompt = `Berdasarkan teks tentang mekanika tanah berikut, buatkan ringkasan yang lengkap dan mendetail dalam format Markdown. Gunakan sintaks Markdown standar: Gunakan #, ##, ### untuk judul, - atau * untuk daftar, **teks** untuk tebal, dan *teks* untuk miring. Untuk rumus, cukup tuliskan seperti biasa dan jika ada pangkat atau indeks, gunakan ^ atau _ (contoh: e_0, sigma^2). Untuk contoh perhitungan, bungkus dalam blok kode (\`\`\`) dengan penanda 'calculation'.`;
+            const prompt = `Berdasarkan teks tentang mekanika tanah berikut, buatkan ringkasan yang lengkap dan mendetail dalam format Markdown. Pastikan untuk menyertakan elemen-elemen berikut untuk setiap bab yang dibahas:
+1.  **Definisi Kunci:** Jelaskan istilah-istilah penting.
+2.  **Konsep Utama:** Paparkan ide-ide dan prinsip-prinsip utama.
+3.  **Rumus Penting:** Cantumkan rumus-rumus yang relevan dari teks.
+4.  **Contoh Perhitungan:** Berikan satu contoh perhitungan sederhana yang relevan dengan bab tersebut, jika data yang dibutuhkan tersedia dalam teks.
+
+Gunakan sintaks Markdown standar: Gunakan #, ##, ### untuk judul, - atau * untuk daftar, **teks** untuk tebal, dan *teks* untuk miring. Untuk contoh perhitungan, bungkus dalam blok kode (\`\`\`) dengan penanda 'calculation'.`;
             
             try {
                 let chatHistory = [{ role: "user", parts: [{ text: prompt }, { text: text }] }];
